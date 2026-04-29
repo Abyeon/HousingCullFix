@@ -1,0 +1,13 @@
+{
+    "Author": "Abyeon, Glorou",
+    "Name": "Housing Cull Fix",
+    "Punchline": "Remove that pesky pop in.",
+    "Description": "Removes the annoying 400 housing item display limit.",
+    "DalamudApiLevel": 15,
+    "ApplicableVersion": "any",
+    "Tags": [
+        "housing",
+        "cull",
+        "fix"
+    ]
+}
