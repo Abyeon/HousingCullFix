@@ -34,7 +34,7 @@ public unsafe class CullHook : IDisposable
             {
                 var ex = (BgObjectEx*)a1;
                 ex->Visibility = 0xFFFF;
-                return cullHook!.Original(a1, a2, 50331708, a4);
+                return cullHook!.Original(a1, a2, a3, a4);
             }
         }
         catch (Exception e)
