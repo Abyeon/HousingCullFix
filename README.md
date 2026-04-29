@@ -1,5 +1,5 @@
 # HousingCullFix
-## Fix that pesky pop in.
+Fixes that pesky housing item pop in due to the new display limit.
 
 ## How To Use
 1) Go to the ``/xlsettings`` "Experimental" tab.
