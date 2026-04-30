@@ -53,6 +53,17 @@ public unsafe class CullHook : IDisposable
 
         Plugin.Framework.Run(RedrawObjects); // redraw objects in case they were already culled
     }
+
+    private static void EnableCull()
+    {
+        var man = HousingManager.Instance();
+        if (man == null || !man->IsInside()) return;
+        
+        var config = (GraphicsConfigEx*)GraphicsConfig.Instance();
+        if (config == null) return;
+
+        config->IsInside = true;
+    }
     
     private static void RedrawObjects()
     {
@@ -123,6 +134,7 @@ public unsafe class CullHook : IDisposable
         // cullHook?.Dispose();
         loadIndoorsHook?.Dispose();
         
+        Plugin.Framework.Run(EnableCull);
         Plugin.Framework.Run(RedrawObjects);
         Plugin.Log.Verbose("CullHook disposed");
     }
