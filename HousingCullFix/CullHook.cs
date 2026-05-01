@@ -36,12 +36,12 @@ public unsafe class CullHook : IDisposable
         loadIndoorsHook?.Enable();
         // cullCone?.Enable();
         
-        DisableCull();
+        ToggleCulling(false);
 
         Plugin.Log.Verbose("Enabled CullHook!");
     }
 
-    private static void DisableCull()
+    private static void ToggleCulling(bool enabled)
     {
         var man = HousingManager.Instance();
         if (man == null || !man->IsInside()) return;
@@ -49,20 +49,9 @@ public unsafe class CullHook : IDisposable
         var config = (GraphicsConfigEx*)GraphicsConfig.Instance();
         if (config == null) return;
 
-        config->IsInside = false; // just tell the game we're outside duh
+        config->IsInside = enabled; // just tell the game we're outside duh
 
         Plugin.Framework.Run(RedrawObjects); // redraw objects in case they were already culled
-    }
-
-    private static void EnableCull()
-    {
-        var man = HousingManager.Instance();
-        if (man == null || !man->IsInside()) return;
-        
-        var config = (GraphicsConfigEx*)GraphicsConfig.Instance();
-        if (config == null) return;
-
-        config->IsInside = true;
     }
     
     private static void RedrawObjects()
@@ -105,13 +94,14 @@ public unsafe class CullHook : IDisposable
     //     return cullHook!.Original(a1, a2, a3, a4);
     // }
 
-    public void LoadIndoorsDetour( IntPtr a1, int a2, CStringPointer a3, IntPtr a4, int a5, int a6, int a7, IntPtr a8, int a9)
+    public void LoadIndoorsDetour( IntPtr a1, int a2, CStringPointer level, IntPtr a4, int a5, int a6, int a7, IntPtr a8, int a9)
     {
-        loadIndoorsHook!.Original(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+        loadIndoorsHook!.Original(a1, a2, level, a4, a5, a6, a7, a8, a9);
         
-        // Plugin.Log.Debug($"{a3}");
+        Plugin.Log.Verbose($"Loading: {level}");
+        if (!level.ToString().Contains("/ind/")) return;
         
-        DisableCull();
+        ToggleCulling(false);
     }
     
     //
@@ -134,8 +124,7 @@ public unsafe class CullHook : IDisposable
         // cullHook?.Dispose();
         loadIndoorsHook?.Dispose();
         
-        Plugin.Framework.Run(EnableCull);
-        Plugin.Framework.Run(RedrawObjects);
+        Plugin.Framework.Run(() => ToggleCulling(true));
         Plugin.Log.Verbose("CullHook disposed");
     }
 }
