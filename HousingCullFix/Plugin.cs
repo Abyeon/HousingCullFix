@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -6,6 +7,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
+using HousingCullFix.Fixes;
 
 namespace HousingCullFix;
 
@@ -22,7 +24,8 @@ public sealed class Plugin : IDalamudPlugin
     
     public Configuration Configuration { get; init; }
 
-    private CullHook CullHook { get; init; }
+    public readonly List<IFix> Fixes;
+    public int FixIndex { get; set; } = 0;
 
     public readonly WindowSystem WindowSystem = new("HousingCullFix");
     private ConfigWindow ConfigWindow { get; init; }
@@ -30,7 +33,6 @@ public sealed class Plugin : IDalamudPlugin
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-        CullHook = new CullHook();
 
         ConfigWindow = new ConfigWindow(this);
 
@@ -43,12 +45,37 @@ public sealed class Plugin : IDalamudPlugin
         
         PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
+
+        Fixes = [
+            new FakeOutside(),
+            new HookAndChange()
+        ];
+        
+        SetFix(Configuration.SelectedFix);
+        SetCastShadows(Configuration.EnableCastShadows);
     }
     
     private void OnCommand(string command, string arguments) => ConfigWindow.Toggle();
     private void ToggleConfigUi() => ConfigWindow.Toggle();
 
-    public static unsafe void SetShadowLights(bool enabled)
+    public void SetFix(string assemblyName)
+    {
+        foreach (var fix in Fixes) 
+            if (fix.Enabled) fix.Disable();
+        
+        for (var i = 0; i < Fixes.Count; i++)
+        {
+            var item = Fixes[i];
+            if (item.GetType().Name == assemblyName)
+            {
+                item.Enable();
+                FixIndex = i;
+                break;
+            }
+        }
+    }
+
+    public static unsafe void SetCastShadows(bool enabled)
     {
         var config = GraphicsConfig.Instance();
         if (config == null) throw new NullReferenceException("GraphicsConfig.Instance() returned null");
@@ -89,10 +116,14 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.RemoveAllWindows();
         
         ConfigWindow.Dispose();
+
+        foreach (var fix in Fixes)
+        {
+            fix.Dispose();
+        }
         
-        SetShadowLights(true);
+        SetCastShadows(true);
         
-        CullHook.Dispose();
         Log.Verbose("Plugin disposed.");
     }
 }
