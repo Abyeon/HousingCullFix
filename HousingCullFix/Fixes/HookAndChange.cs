@@ -39,7 +39,7 @@ public unsafe class HookAndChange : IFix
     {
         cullHook?.Disable();
         Enabled = false;
-        Plugin.Framework.Run(Utils.RedrawObjects);
+        Plugin.Framework.Run(Scene.RedrawObjects);
         
         Plugin.Log.Debug($"Disabled Hook and Change fix!");
     }
@@ -68,7 +68,7 @@ public unsafe class HookAndChange : IFix
     {
         cullHook?.Dispose();
         Enabled = false;
-        Plugin.Framework.Run(Utils.RedrawObjects);
+        Plugin.Framework.Run(Scene.RedrawObjects);
         
         Plugin.Log.Debug($"Disposed Hook and Change fix!");
     }

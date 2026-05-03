@@ -38,10 +38,12 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.IsItemDeactivated())
         {
             configuration.Save();
-            Utils.SetCastShadows(castShadows);
+            Scene.SetCastShadows(castShadows);
         }
         
-        ImGuiComponents.HelpMarker("This toggles Cast Shadows within housing.\nThe in-game setting can be found at Graphics Settings > Cast Shadows");
+        ImGuiComponents.HelpMarker("This toggles Cast Shadows within housing.\n" +
+                                   "The in-game setting can be found at Graphics Settings > Cast Shadows\n" +
+                                   "Disabling this may improve performance significantly in certain houses.");
     }
 
     public void DrawFixDropdown()

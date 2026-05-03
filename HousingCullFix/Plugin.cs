@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Dalamud.Game.Command;
+using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -19,7 +20,7 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
-    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
+    [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
 
     private const string CommandName = "/housingcullfix";
     
@@ -53,7 +54,7 @@ public sealed class Plugin : IDalamudPlugin
         ];
         
         SetFix(Configuration.SelectedFix);
-        Utils.SetCastShadows(Configuration.EnableCastShadows);
+        Scene.SetCastShadows(Configuration.EnableCastShadows);
     }
     
     private void OnCommand(string command, string arguments) => ConfigWindow.Toggle();
@@ -70,10 +71,19 @@ public sealed class Plugin : IDalamudPlugin
             if (item.GetType().Name == assemblyName)
             {
                 item.Enable();
-                FixIndex = i;
+                FixIndex = i;//
+                WarnOfFix();
                 break;
             }
         }
+    }
+
+    public unsafe void WarnOfFix()
+    {
+        var man = HousingManager.Instance();
+        if (man == null || !man->IsInside()) return;
+        
+        Toast.Warning("Some objects may have been reverted to their default state. Please re-enter the area to fix.");
     }
     
     public void Dispose()
@@ -92,7 +102,7 @@ public sealed class Plugin : IDalamudPlugin
             fix.Dispose();
         }
         
-        Utils.SetCastShadows(true);
+        Scene.SetCastShadows(true);
         
         Log.Verbose("Plugin disposed.");
     }

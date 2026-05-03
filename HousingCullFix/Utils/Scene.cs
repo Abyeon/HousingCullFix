@@ -1,11 +1,12 @@
 ﻿using System;
+using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
 using Serilog;
 
 namespace HousingCullFix;
 
-public static unsafe class Utils
+public static unsafe class Scene
 {
     public static void SetCastShadows(bool enabled)
     {
@@ -52,7 +53,7 @@ public static unsafe class Utils
             
             gameObject->DisableDraw();
             
-            Plugin.Log.Verbose($"Redrawing {gameObject->NameString}");
+            Plugin.Log.Verbose($"Redrawing {gameObject->NameString} : {((IntPtr)gameObject):X}");
         }
     }
 }

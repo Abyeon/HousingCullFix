@@ -65,7 +65,7 @@ public unsafe class FakeOutside : IFix
 
         ((GraphicsConfigEx*)config)->IsInside = enabled; // just tell the game we're outside duh
 
-        Plugin.Framework.Run(Utils.RedrawObjects); // redraw objects in case they were already culled
+        Plugin.Framework.Run(Scene.RedrawObjects); // redraw objects in case they were already culled
     }
     
     public void Dispose()
