@@ -1,8 +1,7 @@
 ﻿using System;
 using Dalamud.Interface.ImGuiNotification;
-using Dalamud.Plugin.Services;
 
-namespace HousingCullFix;
+namespace HousingCullFix.Utils;
 
 public static class Toast
 {

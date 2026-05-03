@@ -9,6 +9,7 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
 using HousingCullFix.Fixes;
+using HousingCullFix.Utils;
 
 namespace HousingCullFix;
 
