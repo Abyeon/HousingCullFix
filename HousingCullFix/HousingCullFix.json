@@ -5,9 +5,11 @@
     "Description": "Removes the annoying 400 housing item display limit.\nThanks to Karou for the help.",
     "DalamudApiLevel": 15,
     "ApplicableVersion": "any",
+    "RepoUrl": "https://github.com/Abyeon/HousingCullFix",
     "Tags": [
         "housing",
         "cull",
-        "fix"
+        "fix",
+        "utility"
     ]
 }
