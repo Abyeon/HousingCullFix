@@ -10,7 +10,7 @@ namespace HousingCullFix.Fixes;
 
 public unsafe class FakeOutside : IFix
 {
-    public string Name { get; init; } = "Fake Outside";
+    public string Name { get; init; } = "Fake Outside (Recommended)";
 
     public string Description { get; init; } = "Flips a \"IsInside\" boolean the game checks before running their new culling algorithm.\n" +
                                                "This has the side benefit of re-enabling void lighting.";
@@ -20,7 +20,7 @@ public unsafe class FakeOutside : IFix
     private delegate void LoadIndoorsDelegate(IntPtr a1, int a2, CStringPointer a3, IntPtr a4, int a5, int a6, int a7, IntPtr a8, int a9);
 
     [Signature("40 53 48 83 EC ?? 8B 44 24 ?? 48 8B D9 89 41", DetourName = nameof(LoadIndoorsDetour))]
-    private Hook<LoadIndoorsDelegate>? loadIndoorsHook;
+    private readonly Hook<LoadIndoorsDelegate>? loadIndoorsHook = null!;
 
     public FakeOutside()
     {
@@ -65,25 +65,7 @@ public unsafe class FakeOutside : IFix
 
         ((GraphicsConfigEx*)config)->IsInside = enabled; // just tell the game we're outside duh
 
-        Plugin.Framework.Run(RedrawObjects); // redraw objects in case they were already culled
-    }
-    
-    private static void RedrawObjects()
-    {
-        var man = HousingManager.Instance();
-        if (man == null) return;
-
-        var furnitureMan = man->GetFurnitureManager();
-        
-        foreach (ref var ptr in furnitureMan->ObjectManager.ObjectArray.Objects)
-        {
-            var gameObject = ptr.Value;
-            if (gameObject == null) continue;
-            
-            gameObject->DisableDraw();
-            
-            Plugin.Log.Verbose($"Redrawing {gameObject->NameString}");
-        }
+        Plugin.Framework.Run(Utils.RedrawObjects); // redraw objects in case they were already culled
     }
     
     public void Dispose()

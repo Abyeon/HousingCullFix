@@ -38,7 +38,7 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.IsItemDeactivated())
         {
             configuration.Save();
-            Plugin.SetCastShadows(castShadows);
+            Utils.SetCastShadows(castShadows);
         }
         
         ImGuiComponents.HelpMarker("This toggles Cast Shadows within housing.\nThe in-game setting can be found at Graphics Settings > Cast Shadows");
@@ -47,11 +47,28 @@ public class ConfigWindow : Window, IDisposable
     public void DrawFixDropdown()
     {
         var name = configuration.SelectedFix;
+
+        bool fixSelected = plugin.FixIndex == -1;
+        var preview = fixSelected ? "None" : plugin.Fixes[plugin.FixIndex].Name;
         
-        using var popup = ImRaii.Combo("Culling Fix To Use", plugin.Fixes[plugin.FixIndex].Name);
+        using var popup = ImRaii.Combo("Culling Fix To Use", preview);
         if (!popup.Success) return;
 
         uint id = 0;
+        ImGui.PushID(++id);
+        if (ImGui.Selectable("None", fixSelected))
+        {
+            foreach (var fix in plugin.Fixes) fix.Disable();
+            plugin.FixIndex = -1;
+            configuration.SelectedFix = "";
+            configuration.Save();
+        }
+
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip("Brings back vanilla behaviour.");
+        }
+        
         foreach (var fix in plugin.Fixes)
         {
             ImGui.PushID(++id);

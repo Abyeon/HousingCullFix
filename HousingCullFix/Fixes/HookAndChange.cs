@@ -20,7 +20,7 @@ public unsafe class HookAndChange : IFix
     private delegate byte CullDelegate(BgObject* a1, int a2, uint a3, float a4);
     
     [Signature("40 55 56 57 41 55 41 56 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 0F 29 B4 24", DetourName = nameof(CullDetour))]
-    private Hook<CullDelegate>? cullHook;
+    private readonly Hook<CullDelegate>? cullHook = null!;
 
     public HookAndChange()
     {
@@ -39,6 +39,7 @@ public unsafe class HookAndChange : IFix
     {
         cullHook?.Disable();
         Enabled = false;
+        Plugin.Framework.Run(Utils.RedrawObjects);
         
         Plugin.Log.Debug($"Disabled Hook and Change fix!");
     }
@@ -67,6 +68,7 @@ public unsafe class HookAndChange : IFix
     {
         cullHook?.Dispose();
         Enabled = false;
+        Plugin.Framework.Run(Utils.RedrawObjects);
         
         Plugin.Log.Debug($"Disposed Hook and Change fix!");
     }
