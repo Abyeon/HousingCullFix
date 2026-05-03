@@ -6,6 +6,7 @@
     "DalamudApiLevel": 15,
     "ApplicableVersion": "any",
     "RepoUrl": "https://github.com/Abyeon/HousingCullFix",
+    "IconUrl": "https://raw.githubusercontent.com/Abyeon/HousingCullFix/refs/heads/master/Data/icon.png",
     "Tags": [
         "housing",
         "cull",
