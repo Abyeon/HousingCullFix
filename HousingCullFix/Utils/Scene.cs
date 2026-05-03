@@ -1,10 +1,9 @@
 ﻿using System;
-using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
 using Serilog;
 
-namespace HousingCullFix;
+namespace HousingCullFix.Utils;
 
 public static unsafe class Scene
 {

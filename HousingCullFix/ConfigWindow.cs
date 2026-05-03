@@ -7,6 +7,7 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using HousingCullFix.Fixes;
+using HousingCullFix.Utils;
 
 namespace HousingCullFix;
 

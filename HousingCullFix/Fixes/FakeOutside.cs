@@ -4,6 +4,7 @@ using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
 using HousingCullFix.Structs;
+using HousingCullFix.Utils;
 using InteropGenerator.Runtime;
 
 namespace HousingCullFix.Fixes;
