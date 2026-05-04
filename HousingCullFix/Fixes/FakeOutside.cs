@@ -1,8 +1,11 @@
 ﻿using System;
+using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
+using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
+using FFXIVClientStructs.FFXIV.Client.System.String;
 using HousingCullFix.Structs;
 using HousingCullFix.Utils;
 using InteropGenerator.Runtime;
@@ -18,10 +21,10 @@ public unsafe class FakeOutside : IFix
     
     public bool Enabled { get; set; }
     
-    private delegate void LoadIndoorsDelegate(IntPtr a1, int a2, CStringPointer a3, IntPtr a4, int a5, int a6, int a7, IntPtr a8, int a9);
+    private delegate void LoadZoneDelegate(LayoutManager* layoutManager, int id, CStringPointer bg, CStringPointer bgNoExtension, int territoryType, int layerFilterKey, int type, GameMain.Festival[] festivals, int cfcId);
 
-    [Signature("40 53 48 83 EC ?? 8B 44 24 ?? 48 8B D9 89 41", DetourName = nameof(LoadIndoorsDetour))]
-    private readonly Hook<LoadIndoorsDelegate>? loadIndoorsHook = null!;
+    [Signature("40 53 48 83 EC ?? 8B 44 24 ?? 48 8B D9 89 41", DetourName = nameof(LoadZoneDetour))]
+    private readonly Hook<LoadZoneDelegate>? loadZoneHook = null!;
 
     public FakeOutside()
     {
@@ -30,7 +33,7 @@ public unsafe class FakeOutside : IFix
     
     public void Enable()
     {
-        loadIndoorsHook?.Enable();
+        loadZoneHook?.Enable();
         Plugin.Framework.Run(() => ToggleCulling(false));
         Enabled = true;
 
@@ -39,21 +42,28 @@ public unsafe class FakeOutside : IFix
 
     public void Disable()
     {
-        loadIndoorsHook?.Disable();
+        loadZoneHook?.Disable();
         Plugin.Framework.Run(() => ToggleCulling(true));
         Enabled = false;
         
         Plugin.Log.Debug("Disabled Fake Outside fix.");
     }
     
-    public void LoadIndoorsDetour( IntPtr a1, int a2, CStringPointer level, IntPtr a4, int a5, int a6, int a7, IntPtr a8, int a9)
+    public void LoadZoneDetour(LayoutManager* layoutManager, int id, CStringPointer bg, CStringPointer bgNoExtension, int territoryType, int layerFilterKey, int type, GameMain.Festival[] festivals, int cfcId)
     {
-        loadIndoorsHook!.Original(a1, a2, level, a4, a5, a6, a7, a8, a9);
+        Plugin.Log.Verbose($"Loading: {bg}");
         
-        Plugin.Log.Verbose($"Loading: {level}");
-        if (!level.ToString().Contains("/ind/")) return;
+        if (bgNoExtension.ToString().Contains("/ind/"))
+        {
+            var newString = bgNoExtension.ToString().Replace("/ind/", "/hehe/"); // Just swapping this is okay :)
+            fixed (char* charPtr = newString)
+            {
+                loadZoneHook!.Original(layoutManager, id, bg, (byte*)charPtr, territoryType, layerFilterKey, type, festivals, cfcId);
+                return;
+            }
+        }
         
-        ToggleCulling(false);
+        loadZoneHook!.Original(layoutManager, id, bg, bgNoExtension, territoryType, layerFilterKey, type, festivals, cfcId);
     }
     
     private static void ToggleCulling(bool enabled)
@@ -64,6 +74,7 @@ public unsafe class FakeOutside : IFix
         var config = GraphicsConfig.Instance();
         if (config == null) return;
 
+        Plugin.Log.Verbose($"Setting GraphicsConfig->IsInside to {enabled}");
         ((GraphicsConfigEx*)config)->IsInside = enabled; // just tell the game we're outside duh
 
         Plugin.Framework.Run(Scene.RedrawObjects); // redraw objects in case they were already culled
@@ -71,7 +82,7 @@ public unsafe class FakeOutside : IFix
     
     public void Dispose()
     {
-        loadIndoorsHook?.Dispose();
+        loadZoneHook?.Dispose();
         Enabled = false;
         
         Plugin.Framework.Run(() => ToggleCulling(true));
