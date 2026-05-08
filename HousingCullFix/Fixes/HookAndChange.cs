@@ -32,8 +32,6 @@ public unsafe class HookAndChange : IFix
     {
         cullHook?.Enable();
         Enabled = true;
-        
-        Plugin.Log.Debug($"Enabled Hook and Change fix!");
     }
 
     public void Disable()
@@ -41,8 +39,6 @@ public unsafe class HookAndChange : IFix
         cullHook?.Disable();
         Enabled = false;
         Plugin.Framework.Run(Scene.RedrawObjects);
-        
-        Plugin.Log.Debug($"Disabled Hook and Change fix!");
     }
     
     public byte CullDetour(BgObject* a1, int a2, uint a3, float a4)
@@ -70,7 +66,5 @@ public unsafe class HookAndChange : IFix
         cullHook?.Dispose();
         Enabled = false;
         Plugin.Framework.Run(Scene.RedrawObjects);
-        
-        Plugin.Log.Debug($"Disposed Hook and Change fix!");
     }
 }

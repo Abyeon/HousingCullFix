@@ -22,11 +22,14 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
+    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
 
     private const string CommandName = "/housingcullfix";
     
     public Configuration Configuration { get; init; }
 
+    public HouseFunctions HouseFunctions { get; set; }
+    
     public readonly List<IFix> Fixes;
     public int FixIndex { get; set; } = -1;
 
@@ -36,6 +39,7 @@ public sealed class Plugin : IDalamudPlugin
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        HouseFunctions = new HouseFunctions();
 
         ConfigWindow = new ConfigWindow(this);
 
@@ -64,7 +68,11 @@ public sealed class Plugin : IDalamudPlugin
     public void SetFix(string assemblyName)
     {
         foreach (var fix in Fixes) 
-            if (fix.Enabled) fix.Disable();
+            if (fix.Enabled)
+            {
+                fix.Disable();
+                Log.Verbose($"Disabled {fix.Name}");
+            }
         
         for (var i = 0; i < Fixes.Count; i++)
         {
@@ -72,14 +80,19 @@ public sealed class Plugin : IDalamudPlugin
             if (item.GetType().Name == assemblyName)
             {
                 item.Enable();
-                FixIndex = i;//
+                Log.Verbose($"Enabled {item.Name}");
+                
+                FixIndex = i;
                 WarnOfFix();
-                break;
+                return;
             }
         }
+        
+        FixIndex = -1; // fix was not found
+        Log.Verbose("No fix selected.");
     }
 
-    public unsafe void WarnOfFix()
+    public static unsafe void WarnOfFix()
     {
         var man = HousingManager.Instance();
         if (man == null || !man->IsInside()) return;
@@ -101,6 +114,7 @@ public sealed class Plugin : IDalamudPlugin
         foreach (var fix in Fixes)
         {
             fix.Dispose();
+            Log.Verbose($"Disposed {fix.Name}");
         }
         
         Scene.SetCastShadows(true);

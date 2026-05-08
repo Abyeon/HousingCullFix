@@ -1,12 +1,8 @@
-﻿using System;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Hooking;
+﻿using Dalamud.Hooking;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
-using FFXIVClientStructs.FFXIV.Client.System.String;
-using HousingCullFix.Structs;
 using HousingCullFix.Utils;
 using InteropGenerator.Runtime;
 
@@ -21,7 +17,7 @@ public unsafe class FakeOutside : IFix
     
     public bool Enabled { get; set; }
     
-    private delegate void LoadZoneDelegate(LayoutManager* layoutManager, int id, CStringPointer bg, CStringPointer bgNoExtension, int territoryType, int layerFilterKey, int type, GameMain.Festival[] festivals, int cfcId);
+    private delegate void LoadZoneDelegate(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, GameMain.Festival[] festivals, uint cfcId);
 
     [Signature("40 53 48 83 EC ?? 8B 44 24 ?? 48 8B D9 89 41", DetourName = nameof(LoadZoneDetour))]
     private readonly Hook<LoadZoneDelegate>? loadZoneHook = null!;
@@ -36,8 +32,6 @@ public unsafe class FakeOutside : IFix
         loadZoneHook?.Enable();
         Plugin.Framework.Run(() => ToggleCulling(false));
         Enabled = true;
-
-        Plugin.Log.Debug("Enabled Fake Outside fix.");
     }
 
     public void Disable()
@@ -45,25 +39,34 @@ public unsafe class FakeOutside : IFix
         loadZoneHook?.Disable();
         Plugin.Framework.Run(() => ToggleCulling(true));
         Enabled = false;
-        
-        Plugin.Log.Debug("Disabled Fake Outside fix.");
     }
     
-    public void LoadZoneDetour(LayoutManager* layoutManager, int id, CStringPointer bg, CStringPointer bgNoExtension, int territoryType, int layerFilterKey, int type, GameMain.Festival[] festivals, int cfcId)
+    public void LoadZoneDetour(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, GameMain.Festival[] festivals, uint cfcId)
     {
         Plugin.Log.Verbose($"Loading: {bg}");
         
-        if (bgNoExtension.ToString().Contains("/ind/"))
-        {
-            var newString = bgNoExtension.ToString().Replace("/ind/", "/hehe/"); // Just swapping this is okay :)
-            fixed (char* charPtr = newString)
-            {
-                loadZoneHook!.Original(layoutManager, id, bg, (byte*)charPtr, territoryType, layerFilterKey, type, festivals, cfcId);
-                return;
-            }
-        }
+        // if (bgNoExtension.ToString().Contains("/ind/"))
+        // {
+        //     // Just to note: replacing bgNoExtension /ind/ or just removing it cancels the logic in this function that:
+        //     // 1) Changes GraphicsConfig->IsInside (0x6A) to true
+        //     // 2) Inits the new culling object found at ffxiv_dx11.exe+28F7190
+        //     // var newString = bgNoExtension.ToString().Replace("/ind/", "/hehe/");
+        //     var newString = "/ind/";
+        //     fixed (char* charPtr = newString)//
+        //     {
+        //         loadZoneHook!.Original(layoutManager, id, bg, (byte*)charPtr, territoryType, layerFilterKey, type, festivals, cfcId);
+        //         //GraphicsConfig.Instance()->IsIndoor = true;
+        //         LayoutWorld.Instance()->ActiveLayout->HousingType = 2;
+        //         return;
+        //     }
+        // }
         
         loadZoneHook!.Original(layoutManager, id, bg, bgNoExtension, territoryType, layerFilterKey, type, festivals, cfcId);
+
+        if (bgNoExtension.ToString().Contains("/ind/"))
+        {
+            ToggleCulling(false);
+        }
     }
     
     private static void ToggleCulling(bool enabled)
@@ -75,7 +78,7 @@ public unsafe class FakeOutside : IFix
         if (config == null) return;
 
         Plugin.Log.Verbose($"Setting GraphicsConfig->IsInside to {enabled}");
-        ((GraphicsConfigEx*)config)->IsInside = enabled; // just tell the game we're outside duh
+        config->IsIndoor = enabled; // just tell the game we're outside duh
 
         Plugin.Framework.Run(Scene.RedrawObjects); // redraw objects in case they were already culled
     }
@@ -86,6 +89,5 @@ public unsafe class FakeOutside : IFix
         Enabled = false;
         
         Plugin.Framework.Run(() => ToggleCulling(true));
-        Plugin.Log.Debug("Disposed Fake Outside fix.");
     }
 }
