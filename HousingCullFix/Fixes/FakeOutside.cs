@@ -18,7 +18,7 @@ public unsafe class FakeOutside : IFix
     
     public bool Enabled { get; set; }
     
-    private delegate void PrefetchZoneDelegate(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, GameMain.Festival[] festivals, uint cfcId);
+    private delegate void PrefetchZoneDelegate(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, IntPtr festivals, uint cfcId);
 
     [Signature("40 53 48 83 EC ?? 8B 44 24 ?? 48 8B D9 89 41", DetourName = nameof(PrefetchZoneDetour))]
     private readonly Hook<PrefetchZoneDelegate>? prefetchZoneHook = null!;
@@ -42,7 +42,7 @@ public unsafe class FakeOutside : IFix
         Enabled = false;
     }
     
-    public void PrefetchZoneDetour(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, GameMain.Festival[] festivals, uint cfcId)
+    public void PrefetchZoneDetour(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, IntPtr festivals, uint cfcId)
     {
         
         // if (bgNoExtension.ToString().Contains("/ind/"))
@@ -63,7 +63,7 @@ public unsafe class FakeOutside : IFix
 
         try
         {
-            Plugin.Log.Verbose($"Loading: {bg}");
+            Plugin.Log.Verbose($"Loading: {bg} / {bgNoExtension}");
             prefetchZoneHook!.Original(layoutManager, id, bg, bgNoExtension, territoryType, layerFilterKey, type, festivals, cfcId);
 
             if (bgNoExtension.ToString().Contains("/ind/"))
