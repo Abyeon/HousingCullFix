@@ -1,9 +1,8 @@
 {
-    "Author": "abyeon",
+    "Author": "Abyeon",
     "Name": "Housing Cull Fix",
     "Punchline": "Now with void lighting fixed!",
     "Description": "Removes the annoying 400 housing item display limit.\nThanks to Karou for the help.",
-    "DalamudApiLevel": 15,
     "ApplicableVersion": "any",
     "RepoUrl": "https://github.com/Abyeon/HousingCullFix",
     "IconUrl": "https://raw.githubusercontent.com/Abyeon/HousingCullFix/refs/heads/master/Data/icon.png",

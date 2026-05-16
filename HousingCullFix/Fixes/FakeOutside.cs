@@ -1,4 +1,5 @@
-﻿using Dalamud.Hooking;
+﻿using System;
+using Dalamud.Hooking;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
@@ -17,10 +18,10 @@ public unsafe class FakeOutside : IFix
     
     public bool Enabled { get; set; }
     
-    private delegate void LoadZoneDelegate(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, GameMain.Festival[] festivals, uint cfcId);
+    private delegate void PrefetchZoneDelegate(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, GameMain.Festival[] festivals, uint cfcId);
 
-    [Signature("40 53 48 83 EC ?? 8B 44 24 ?? 48 8B D9 89 41", DetourName = nameof(LoadZoneDetour))]
-    private readonly Hook<LoadZoneDelegate>? loadZoneHook = null!;
+    [Signature("40 53 48 83 EC ?? 8B 44 24 ?? 48 8B D9 89 41", DetourName = nameof(PrefetchZoneDetour))]
+    private readonly Hook<PrefetchZoneDelegate>? prefetchZoneHook = null!;
 
     public FakeOutside()
     {
@@ -29,21 +30,20 @@ public unsafe class FakeOutside : IFix
     
     public void Enable()
     {
-        loadZoneHook?.Enable();
+        prefetchZoneHook?.Enable();
         Plugin.Framework.Run(() => ToggleCulling(false));
         Enabled = true;
     }
 
     public void Disable()
     {
-        loadZoneHook?.Disable();
+        prefetchZoneHook?.Disable();
         Plugin.Framework.Run(() => ToggleCulling(true));
         Enabled = false;
     }
     
-    public void LoadZoneDetour(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, GameMain.Festival[] festivals, uint cfcId)
+    public void PrefetchZoneDetour(LayoutManager* layoutManager, uint id, CStringPointer bg, CStringPointer bgNoExtension, uint territoryType, uint layerFilterKey, int type, GameMain.Festival[] festivals, uint cfcId)
     {
-        Plugin.Log.Verbose($"Loading: {bg}");
         
         // if (bgNoExtension.ToString().Contains("/ind/"))
         // {
@@ -60,12 +60,20 @@ public unsafe class FakeOutside : IFix
         //         return;
         //     }
         // }
-        
-        loadZoneHook!.Original(layoutManager, id, bg, bgNoExtension, territoryType, layerFilterKey, type, festivals, cfcId);
 
-        if (bgNoExtension.ToString().Contains("/ind/"))
+        try
         {
-            ToggleCulling(false);
+            Plugin.Log.Verbose($"Loading: {bg}");
+            prefetchZoneHook!.Original(layoutManager, id, bg, bgNoExtension, territoryType, layerFilterKey, type, festivals, cfcId);
+
+            if (bgNoExtension.ToString().Contains("/ind/"))
+            {
+                ToggleCulling(false);
+            }
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error(e.ToString());
         }
     }
     
@@ -85,7 +93,7 @@ public unsafe class FakeOutside : IFix
     
     public void Dispose()
     {
-        loadZoneHook?.Dispose();
+        prefetchZoneHook?.Dispose();
         Enabled = false;
         
         Plugin.Framework.Run(() => ToggleCulling(true));
